@@ -49,6 +49,14 @@ var alienBulletY;
    shipX = width / 2;
    shipY = height - (shipDiameter / 2);
    shipSpeed =6;
+   bulletDiameter = 10;
+   shipShooting = false;
+   alienDiameter = 50;
+   alienX = alienDiameter / 2;
+   alienY = alienDiameter / 2;
+   alienVelocity = 10;
+   alienBulletDiameter = 15;
+   alienShooting = false;
  }
 
 
@@ -75,6 +83,13 @@ var alienBulletY;
  function draw() {
    background(20, 30, 40);
    drawShip();
+   drawAlien();
+   if (shipShooting){
+     drawBullet();
+   }
+   if (alienShooting){
+     drawAlienBullet();
+   }
  }
 
 
@@ -108,6 +123,15 @@ var alienBulletY;
  * bullet is currently being fired.
  */
 
+ function keyPressed() {
+   if(keyCode === 32 && !shipShooting){
+    bulletX = shipX;
+    bulletY = shipY;
+    shipShooting = true;
+
+  }
+ }
+
 
 /*
  * drawBullet()
@@ -117,12 +141,42 @@ var alienBulletY;
  * to hit) each time it is hit by a bullet.
  */
 
+ function drawBullet(){
+   var hitAlien = checkCollision(alienX, alienY, alienDiameter, bulletX, bulletY, bulletDiameter);
+   if(bulletY > 0 && !hitAlien){
+     fill("#ff75a5");
+     ellipse(bulletX, bulletY, bulletDiameter, bulletDiameter);
+     bulletY -= 10;
+  }else if(hitAlien) {
+    resetAlien();
+    alienVelocity++;
+    shipShooting = false;
+  }
+  else {
+    shipShooting = false;
+  }
+}
+
 
 /*
  * drawAlien()
  * This function draws an alien. It also checks to see if the alien has touched
  * the player's ship. If it has, the function calls gameOver().
  */
+ function drawAlien() {
+   alienX += alienVelocity;
+   if(alienX >= width - (alienDiameter / 2) || alienX <= alienDiameter / 2) {
+     alienVelocity *= -1;
+   }
+   fill("#ff0ff");
+   ellipse(alienX, alienY, alienDiameter, alienDiameter);
+   if(random(4) < 1 && !alienShooting) {
+     alienBulletY = alienY;
+     alienBulletX = alienX;
+     alienShooting = true;
+
+   }
+ }
 
 
 /*
@@ -130,6 +184,17 @@ var alienBulletY;
  * This function behaves much like drawBullet(), only it fires from the alien
  * and not the player's ship. If the bullet hits the player, it's game over.
  */
+ function drawAlienBullet(){
+   if(alienBulletY < height) {
+     fill("#00ffff");
+     noStroke();
+     ellipse(alienBulletX, alienBulletY, alienBulletDiameter, alienBulletDiameter)
+     alienBulletY += 10;
+   }
+   else{
+     alienShooting = false;
+   }
+ }
 
 
 /*
@@ -139,6 +204,11 @@ var alienBulletY;
  * velocity was negative when it died, it becomes positive upon reset, making
  * it always start by moving to the right).
  */
+ function resetAlien(){
+   alienX = alienDiameter / 2;
+   alienY = alienDiameter / 2;
+   alienVelocity = abs(alienVelocity);
+ }
 
 
 /*
@@ -149,3 +219,12 @@ var alienBulletY;
  * Circles are considered touching if
  * (distance <= (circle1Diameter + circle2Diameter) / 2)
  */
+ function checkCollision(aX, aY, aD, bX, bY, bD) {
+   var distance = dist(aX, aY, bX, bY)
+   if(distance <= (aD + bD)/ 2) {
+    return true;
+   }
+   else {
+    return false;
+   }
+ }
